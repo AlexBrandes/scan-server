@@ -1,0 +1,7 @@
+{
+	"api_endpoint" : "http://titlei.org/api/session_attendance",
+	"input_device" : "Code Corporation Code Reader 3500",
+	"data_separator": ",",
+	"data_fields" : ["user_id", "time", "scanner_id"],
+	"send_frequency" : 20
+}

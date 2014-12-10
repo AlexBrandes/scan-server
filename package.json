@@ -1,0 +1,14 @@
+{
+  "name": "scanner",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "node-hid": "*",
+    "request": "2.49.0"
+  }
+}
