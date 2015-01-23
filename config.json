@@ -3,5 +3,8 @@
 	"input_device" : "Code Corporation Code Reader 3500",
 	"data_separator": ",",
 	"data_fields" : ["user_id", "time", "scanner_id"],
-	"send_frequency" : 20
+	"send_frequency" : 20,
+	"logtype" : "file",
+	"debug_log" : "./logs/debug",
+	"scan_log" : "./logs/scan"
 }

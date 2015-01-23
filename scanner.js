@@ -8,15 +8,119 @@
  */
 (function() {
 	var self = this;
+	var request = require('request');
+	var fs = require('fs');
+	var os = require('os');
+	var prompt = require('prompt');
+	var RSVP = require('rsvp');
+
 	this.HID = require('node-hid');
-	this.request = require('request');
 	this.config = require('./config');
-	this.os = require('os');
 	this.activeDevices = {};
 	this.scanData = [];
 	this.errData = [];
-	this.logType = 'console';
 	this.loop = null;
+
+	var ExitError = {};
+
+	/*
+	 *  DEAL WITH COMMAND LINE INPUTS
+	 */
+	this.hasArguments = function() {
+		return process.argv.length > 2;
+	};
+
+	this.processArguments = function() {
+		var i = 0;
+		for (var i=0; i < process.argv.length; i++) {
+			if ([0,1].indexOf(i) > -1) {
+				i++;
+				continue;
+			}
+
+			var val = process.argv[i];
+
+			switch(val) {
+				case 'devices':
+				case '--devices':
+				case '-d':
+					console.log(self.HID.devices());
+					throw ExitError;
+				break;
+
+				case 'hostname':
+				case '--hostname':
+				case '-ho':
+					console.log(os.hostname());
+					throw ExitError;
+				break;
+
+				case 'config':
+				case '--config':
+				case '-c':
+					console.log(self.config);
+					throw ExitError;
+				break;
+
+				case 'help':
+				case '--help':
+				case '-h':
+					console.log('\n  SCANNER.JS CODE READER 3500 SCAN SERVER');
+					console.log('  Written by Alex Brandes 2014.\n')
+					console.log('  USE: sudo node scanner [options]');
+					console.log('  OPTIONS ARE ONE OF: ');
+					console.log('\t[none]   -> start the scan server');
+					console.log('\tdevices  -> list all connected usb devices');
+					console.log('\thostname -> display the machine\'s hostname');
+					console.log('\tconfig   -> dump app configuration');
+
+					throw ExitError;
+				break
+
+				case 'logtype':
+				case '--logtype':
+				case '-l':
+					var nextIndex = i+1;
+					self.config.logType = process.argv[nextIndex];
+					console.log('log type set to '+self.config.logType);
+					return false;
+				break
+
+				case '--clear-logs':
+				case 'clear-logs':
+					fs.writeFile(config.debug_log, '', function(err) {
+						if (err) console.log('could not write to debug log.');
+					});
+
+					fs.writeFile(config.scan_log, '', function(err) {
+						if (err) console.log('could not write to scan log.');
+					});
+
+					throw ExitError;
+				break
+
+				default: 
+					throw new Error(val+' is not a valid argument.');
+			}
+
+			i++;
+		};
+	};
+
+	if (this.hasArguments()) {
+		try {
+			this.processArguments();
+		}
+		catch (err) {
+			if (err == ExitError) return;
+
+			console.log(err);
+		}
+	}
+
+	/*
+	 *  RUN SCANNER SERVER
+	 */
 
 	// HID key code mappings
 	this.hid_table = {
@@ -55,7 +159,7 @@
 
 		// no scanners
 		if (code_reader_paths.length == 0) { 
-			self.log('No code readers found.');
+			self.log('info', 'No code readers found.');
 		}
 
 		return code_reader_paths;
@@ -70,13 +174,16 @@
 		        var table = (data[0] & 0x2) ? self.shift_hid_table : self.hid_table;
 
 				if (table[keyChar]) text += table[keyChar];
+
+				// 40 is buffer end signal
 			    else if (keyChar == 40) {
+			    	self.log('scan', text);
 			    	var fields = text.split(self.config.data_separator);
 
 			    	var pushData = {};
 			    	for (var i = 0; i < self.config.data_fields.length; i++) {
 			    		var key = self.config.data_fields[i];
-			    		pushData[key] = fields[0];
+			    		pushData[key] = fields[i];
 			    	}
 			    	self.scanData.push(pushData);
 
@@ -89,11 +196,12 @@
 		});
 
 		device.on('error', function(err) {
-			self.log('error with device. Removing from active list.');
+			self.log('error', 'error with device. Removing from active list.');
+			self.log('error', err);
+
 			delete(self.activeDevices[device.path]);
 			var totalScanners = Object.keys(self.activeDevices).length;
-			self.log('Listening to '+totalScanners+' scanner'+(totalScanners !== 1 ? 's' : '')+'.');
-			self.log(err);
+			self.log('info', 'Listening to '+totalScanners+' scanner'+(totalScanners !== 1 ? 's' : '')+'.');
 		});
 	};
 
@@ -107,40 +215,34 @@
 			self.errData = [];
 		}
 
-		// post the data
-		self.log(getTimestamp()+' Sending '+formData.length+' scans to server.');
-		self.request.post({
+		var postData = {
 			url: self.config.api_endpoint,
 			formData: {
 				status: formData.length == 0 ? 'no data' : 'has data',
-				data: formData
+				data: JSON.stringify(formData)
 			}
-		}, function(err, httpResponse, body) {
-			if (err) {
-				self.errData = self.errData.concat(formData);
-				self.log(getTimestamp()+' Send error:');
-				self.log(err);
-			}
-			else {
-				self.log('Successful response');
-			}
-		});
-	};
+		};
 
-	this.getTimestamp = function() {
-		var now = new Date();
+		// post the data
+		self.log('info', 'Sending '+formData.length+' scans to server.');
 
-		var minutes = now.getMinutes();
+		var sendRequest = function(resolve, reject) {
+			request.post(postData, function(err, httpResponse, body) {
+				if (err) {
+					self.errData = self.errData.concat(formData);
+					self.log('error', 'Send error: '+err);
+					reject(httpResponse);
+				}
+				else {
+					self.log('info', 'Successful response');
+					resolve(body);
+				}
+			});
+		};
 
-		var timestamp = '';
-		timestamp += now.getFullYear()+'/';
-		timestamp += (now.getMonth() + 1)+'/';
-		timestamp += now.getDate()+ ' ';
-		timestamp += now.getHours()+':';
-		timestamp += (new String(minutes).length == 1 ? '0'+minutes : minutes)+':';
-		timestamp += now.getSeconds();
+		var response =  new RSVP.Promise(sendRequest);
 
-		return timestamp;
+		return response;
 	};
 
 	this.updateDevices = function() {
@@ -158,28 +260,82 @@
 					self.activeDevices[path] = hidDevice;
 					listen(self.activeDevices[path]);
 
-					self.log('Scanner located.');
+					self.log('info', 'Scanner located.');
 					var totalScanners = Object.keys(self.activeDevices).length;
-					self.log('Listening to '+totalScanners+' scanner'+(totalScanners > 1 ? 's' : '')+'.');
+					self.log('info', 'Listening to '+totalScanners+' scanner'+(totalScanners > 1 ? 's' : '')+'.');
 				}
 				catch (err) {
-					self.log('could not open device at path '+path); 
-					self.log(err);
+					self.log('error', err);
+					console.log(self.activeDevices);
 				}
 			}
 		}
 	};
 
-	this.log = function(content) {
-		var logType = self.logType || 'file';
+	this.getTimestamp = function() {
+		var now = new Date();
 
-		if (logType == 'console') {
-			console.log(content);
+		var minutes = now.getMinutes();
+		var seconds = now.getSeconds();
+
+		var timestamp = '';
+		timestamp += now.getFullYear()+'/';
+		timestamp += (now.getMonth() + 1)+'/';
+		timestamp += now.getDate()+ ' ';
+		timestamp += now.getHours()+':';
+		timestamp += (new String(minutes).length == 1 ? '0'+minutes : minutes)+':';
+		timestamp += (new String(seconds).length == 1 ? '0'+seconds : seconds);
+
+		return timestamp;
+	};
+
+	this.log = function(type, content) {
+		var logType = self.config.logType || 'file';
+		var timestamp = self.getTimestamp();
+
+		if (type == 'info' || type == 'error'){
+			switch (logType) {
+				case 'console':
+					console.log(type.toUpperCase()+': '+timestamp+' '+content);
+				break;
+
+				// file
+				default:
+					var timestamp = self.getTimestamp();
+					fs.appendFile(self.config.debug_log, type.toUpperCase()+': '+timestamp+' '+content+'\n', function(err) {
+						if (err) {
+							console.log('There was an error writing to log file.');
+							console.log(err);
+						}
+					});
+				break;
+			}
 		}
+		else if (type == 'scan') {
+			fs.appendFile(self.config.scan_log, timestamp+' -- '+content+'\n', function(err) {
+				if (err) {
+					console.log('There was an error writing to scan log file.');
+					console.log(err);
+				}
+			});
+		}
+		
+	};
+
+	self.exit = function(code) {
+		var code = typeof code === 'undefined' ? 0 : code;
+
+		process.exit(code);
+
+		// if we're still here after exit, force an abort
+		setTimeout(function() {
+			process.abort();
+		}, 1000);
+		return;
 	};
 
 	this.run = function() {
-		self.log('Spinning up scanner server. Current machine has hostname: '+self.os.hostname());
+		self.log('info', 'Spinning up scanner server. Current machine has hostname: '+os.hostname());
 
 		// initial device search
 		self.updateDevices();
@@ -195,5 +351,66 @@
 		return interval;
 	};
 
+	this.showPrompt  = function() {
+		prompt.start();
+		prompt.message = 'Available commands';
+		prompt.delimiter = ' ';
+
+		prompt.get(['exit dump-devices dump-config hostname'], function(err, result) {
+			if (err) console.log('error:'+err);
+			else {
+				for (key in result) {
+					var input = result[key];
+
+					switch (input) {
+						case 'exit':
+							// close all devices
+							for (key in self.activeDevices) {
+								var device = activeDevices[key];
+								device.close();
+							}
+
+							console.log('Sending final data.');
+							clearInterval(self.loop);
+							
+							self.pushDataToApi().then(function() {
+								console.log('Final data sent. Exiting.');
+								self.exit(0);
+							}, 
+							function() {
+								console.log('Final data send error: not sent. All scans are available in the scan log. Exiting.');
+								self.exit(0);
+							});
+						break
+
+						case 'dump-config':
+							console.log('Config: ');
+							console.log(self.config);
+							self.showPrompt();
+						break
+
+						case 'dump-devices':
+							console.log('Active devices: ');
+							console.log(Object.keys(self.activeDevices));
+							self.showPrompt();
+						break;
+
+						case 'hostname':
+							console.log('Hostname: '+os.hostname());
+							self.showPrompt();
+						break;
+
+						default:
+							console.log('invalid entry');
+							self.showPrompt();
+					}
+				}
+			}
+		})
+	};
+
+	console.log('Scan server running...');
 	self.loop = self.run();
+
+	self.showPrompt();
 })();
