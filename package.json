@@ -8,7 +8,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "node-hid": "*",
+    "node-hid": "0.3.2",
     "prompt": "~0.2.14",
     "request": "~2.49.0",
     "rsvp": "^3.0.14"
