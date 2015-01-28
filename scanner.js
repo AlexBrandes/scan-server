@@ -302,7 +302,7 @@
 				// file
 				default:
 					var timestamp = self.getTimestamp();
-					var debugLogPath = realpathSync(__dirname+'/'+self.config.debug_log);
+					var debugLogPath = fs.realpathSync(__dirname+'/'+self.config.debug_log);
 					fs.appendFile(debugLogPath, type.toUpperCase()+': '+timestamp+' '+content+'\n', function(err) {
 						if (err) {
 							console.log('There was an error writing to log file.');
@@ -313,7 +313,7 @@
 			}
 		}
 		else if (type == 'scan') {
-			var scanLogPath = realpathSync(__dirname+'/'+self.config.scan_log);
+			var scanLogPath = fs.realpathSync(__dirname+'/'+self.config.scan_log);
 			fs.appendFile(scanLogPath, timestamp+' -- '+content+'\n', function(err) {
 				if (err) {
 					console.log('There was an error writing to scan log file.');
