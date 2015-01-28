@@ -215,8 +215,10 @@
 			self.errData = [];
 		}
 
+		var endpoint = self.config.api_endpoints[self.config.env];
+
 		var postData = {
-			url: self.config.api_endpoint,
+			url: endpoint,
 			formData: {
 				status: formData.length == 0 ? 'no data' : 'has data',
 				data: JSON.stringify(formData)
@@ -302,8 +304,16 @@
 				// file
 				default:
 					var timestamp = self.getTimestamp();
-					var debugLogPath = fs.realpathSync(__dirname+'/'+self.config.debug_log);
-					fs.appendFile(debugLogPath, type.toUpperCase()+': '+timestamp+' '+content+'\n', function(err) {
+
+					var logpath;
+					if (type == 'error') {
+						logpath = fs.realpathSync(__dirname+'/'+self.config.error_log);
+					}
+					else {
+						logpath = fs.realpathSync(__dirname+'/'+self.config.debug_log);
+					}
+
+					fs.appendFile(logpath, type.toUpperCase()+': '+timestamp+' '+content+'\n', function(err) {
 						if (err) {
 							console.log('There was an error writing to log file.');
 							console.log(err);
