@@ -5,6 +5,6 @@
 	"data_fields" : ["user_id", "time", "scanner_id"],
 	"send_frequency" : 20,
 	"logtype" : "file",
-	"debug_log" : "./logs/debug",
-	"scan_log" : "./logs/scan"
+	"debug_log" : "logs/debug.log",
+	"scan_log" : "logs/scan.log"
 }

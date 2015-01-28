@@ -152,7 +152,7 @@
 		var code_reader_paths = [];
 		for (key in allDevices) {
 			var device = allDevices[key];
-			if (device.product.search(self.config.input_device) > -1) {
+			if (device.product !== 'undefined' && device.product.search(self.config.input_device) > -1) {
 				code_reader_paths.push(device.path);
 			}
 		}
@@ -302,7 +302,8 @@
 				// file
 				default:
 					var timestamp = self.getTimestamp();
-					fs.appendFile(self.config.debug_log, type.toUpperCase()+': '+timestamp+' '+content+'\n', function(err) {
+					var debugLogPath = realpathSync(__dirname+'/'+self.config.debug_log);
+					fs.appendFile(debugLogPath, type.toUpperCase()+': '+timestamp+' '+content+'\n', function(err) {
 						if (err) {
 							console.log('There was an error writing to log file.');
 							console.log(err);
@@ -312,7 +313,8 @@
 			}
 		}
 		else if (type == 'scan') {
-			fs.appendFile(self.config.scan_log, timestamp+' -- '+content+'\n', function(err) {
+			var scanLogPath = realpathSync(__dirname+'/'+self.config.scan_log);
+			fs.appendFile(scanLogPath, timestamp+' -- '+content+'\n', function(err) {
 				if (err) {
 					console.log('There was an error writing to scan log file.');
 					console.log(err);
