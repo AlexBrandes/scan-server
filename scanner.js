@@ -20,6 +20,7 @@
 	this.scanData = [];
 	this.errData = [];
 	this.loop = null;
+	this.mac = null;
 
 	var ExitError = {};
 
@@ -113,7 +114,7 @@
 		}
 		catch (err) {
 			if (err == ExitError) return;
-
+			console.log('Process arguments error: ');
 			console.log(err);
 		}
 	}
@@ -220,7 +221,9 @@
 		var postData = {
 			url: endpoint,
 			formData: {
-				status: formData.length == 0 ? 'no data' : 'has data',
+				requestType: formData.length == 0 ? 'ping' : 'data',
+				hostname: self.hostname,
+				macAddress: self.mac,
 				data: JSON.stringify(formData)
 			}
 		};
@@ -347,7 +350,14 @@
 	};
 
 	this.run = function() {
-		self.log('info', 'Spinning up scanner server. Current machine has hostname: '+os.hostname());
+		self.hostname = os.hostname();
+		require('getmac').getMac(function(err,mac) {
+			if (! err) {
+				self.mac = mac;
+			} 
+		});
+
+		self.log('info', 'Spinning up scanner server. Current machine has hostname: '+self.hostname);
 
 		// initial device search
 		self.updateDevices();
@@ -369,30 +379,21 @@
 		prompt.delimiter = ' ';
 
 		prompt.get(['exit dump-devices dump-config hostname'], function(err, result) {
-			if (err) console.log('error:'+err);
+			if (err) {
+				if (err == 'Error: canceled') {
+					self.cleanup();
+				}
+				else {
+					console.log('prompt error:'+err);
+				}
+			}
 			else {
 				for (key in result) {
 					var input = result[key];
 
 					switch (input) {
 						case 'exit':
-							// close all devices
-							for (key in self.activeDevices) {
-								var device = activeDevices[key];
-								device.close();
-							}
-
-							console.log('Sending final data.');
-							clearInterval(self.loop);
-							
-							self.pushDataToApi().then(function() {
-								console.log('Final data sent. Exiting.');
-								self.exit(0);
-							}, 
-							function() {
-								console.log('Final data send error: not sent. All scans are available in the scan log. Exiting.');
-								self.exit(0);
-							});
+							self.cleanup();
 						break
 
 						case 'dump-config':
@@ -421,8 +422,38 @@
 		})
 	};
 
+	this.cleanup = function() {
+		console.log('cleaning up...');
+
+		// close all devices
+		for (key in self.activeDevices) {
+			var device = activeDevices[key];
+			device.close();
+		}
+
+		console.log('Sending final data.');
+		clearInterval(self.loop);
+		
+		self.pushDataToApi().then(function() {
+			console.log('Final data sent. Exiting.');
+			self.exit(0);
+			return;
+		}, 
+		function() {
+			console.log('Final data send error: not sent. All scans are available in the scan log. Exiting.');
+			self.exit(0);
+		});
+	};
+
 	console.log('Scan server running...');
 	self.loop = self.run();
 
+	// so the program will not close instantly on exit events
+	process.stdin.resume();
+
+	// catches ctrl+c event
+	process.on('SIGINT', self.cleanup);
+
+	// allow command line options
 	self.showPrompt();
 })();
