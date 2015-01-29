@@ -155,7 +155,7 @@
 		var code_reader_paths = [];
 		for (key in allDevices) {
 			var device = allDevices[key];
-			if (device.product !== 'undefined' && device.product.search(self.config.input_device) > -1) {
+			if (typeof device.product !== 'undefined' && device.product.search(self.config.input_device) > -1) {
 				code_reader_paths.push(device.path);
 			}
 		}
