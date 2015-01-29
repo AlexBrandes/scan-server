@@ -245,7 +245,9 @@
 
 					// if no sends for 5 cycles, reset wifi
 					if (self.sendErrorCount > 5) {
+						self.log('error', '5 send errors, resetting wifi.');
 						self.resetWifi();
+						self.sendErrorCount = 0;
 					}
 
 					reject(httpResponse);
@@ -263,10 +265,12 @@
 	};
 
 	this.resetWifi = function() {
-		self.sendErrorCount = 0;
-
 		self.log('error', 'Resetting wifi');
-		require("child_process").exec(__dirname+'/scripts/reset-wifi.sh').unref();
+		var childProcess = require('child_process');
+		var exec = childProcess.exec;
+		exec(__dirname+'/scripts/reset-wifi.sh', function() {
+			self.log('error', 'Reset WIFI execution finished.');
+		});
 	};
 
 	this.updateDevices = function() {
