@@ -1,5 +1,5 @@
 {
-  "env" : "test",
+  "env" : "production",
   "api_endpoints" : {
     "production" : "http://titlei.org/api/session_attendance",
     "test" : "http://requestb.in/11em0on1"
