@@ -21,6 +21,7 @@
 	this.errData = [];
 	this.loop = null;
 	this.mac = null;
+	this.sendErrorCount = 0;
 
 	var ExitError = {};
 
@@ -201,6 +202,8 @@
 			self.log('error', 'error with device. Removing from active list.');
 			self.log('error', err);
 
+
+
 			delete(self.activeDevices[device.path]);
 			var totalScanners = Object.keys(self.activeDevices).length;
 			self.log('info', 'Listening to '+totalScanners+' scanner'+(totalScanners !== 1 ? 's' : '')+'.');
@@ -235,9 +238,15 @@
 		var sendRequest = function(resolve, reject) {
 			request.post(postData, function(err, httpResponse, body) {
 				if (err) {
+					self.sendErrorCount++;
 					self.errData = self.errData.concat(formData);
 					self.log('error', 'send error to '+postData.url);
 					self.log('error', err);
+
+					// if no sends for 5 cycles, reset wifi
+					if (self.sendErrorCount > 5) {
+						self.resetWifi();
+					}
 
 					reject(httpResponse);
 				}
@@ -251,6 +260,13 @@
 		var response =  new RSVP.Promise(sendRequest);
 
 		return response;
+	};
+
+	this.resetWifi = function() {
+		self.sendErrorCount = 0;
+
+		self.log('error', 'Resetting wifi');
+		require("child_process").exec(__dirname+'/scripts/reset-wifi.sh').unref();
 	};
 
 	this.updateDevices = function() {
