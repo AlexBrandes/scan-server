@@ -89,13 +89,14 @@
 
 				case '--clear-logs':
 				case 'clear-logs':
-					fs.writeFile(config.debug_log, '', function(err) {
-						if (err) console.log('could not write to debug log.');
-					});
+					var logs = ['debug_log', 'scan_log', 'error_log'];
 
-					fs.writeFile(config.scan_log, '', function(err) {
-						if (err) console.log('could not write to scan log.');
-					});
+					for (var i=0; i < logs.length; i++) {
+						var log = logs[i];
+						fs.writeFile(config[log], '', function(err) {
+							if (err) console.log('could not write to '+log);
+						});
+					}
 
 					throw ExitError;
 				break
@@ -235,7 +236,9 @@
 			request.post(postData, function(err, httpResponse, body) {
 				if (err) {
 					self.errData = self.errData.concat(formData);
-					self.log('error', 'Send error: '+err);
+					self.log('error', 'send error to '+postData.url);
+					self.log('error', err);
+
 					reject(httpResponse);
 				}
 				else {

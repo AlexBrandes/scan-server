@@ -1,6 +1,6 @@
 {
   "env" : "test",
-	"api_endpoints" : {
+  "api_endpoints" : {
     "production" : "http://titlei.org/api/session_attendance",
     "test" : "http://requestb.in/11em0on1"
   },
@@ -8,7 +8,6 @@
 	"data_separator": ",",
 	"data_fields" : ["user_id", "time", "scanner_id"],
 	"send_frequency" : 20,
-  "ping_frequency" : 55,
 	"logtype" : "file",
   "error_log" : "logs/error.log",
 	"debug_log" : "logs/debug.log",
