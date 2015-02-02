@@ -1,7 +1,7 @@
 {
   "env" : "production",
   "api_endpoints" : {
-    "production" : "http://titlei.org/api/session_attendance",
+    "production" : "http://www.titlei.org/api/session_scan",
     "test" : "http://requestb.in/11em0on1"
   },
 	"input_device" : "Code Corporation Code Reader 3500",
