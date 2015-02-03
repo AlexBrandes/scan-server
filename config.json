@@ -1,15 +1,16 @@
 {
   "env" : "production",
   "api_endpoints" : {
-    "production" : "http://www.titlei.org/api/session_scan",
+    "production" : "http://www.titlei.org/api/session_scan/2",
     "test" : "http://requestb.in/11em0on1"
   },
 	"input_device" : "Code Corporation Code Reader 3500",
 	"data_separator": ",",
 	"data_fields" : ["user_id", "time", "scanner_id"],
-	"send_frequency" : 20,
+	"send_frequency" : 30,
 	"logtype" : "file",
   "error_log" : "logs/error.log",
 	"debug_log" : "logs/debug.log",
-	"scan_log" : "logs/scan.log"
+	"scan_log" : "logs/scan.log",
+	"update_wifi" : true
 }

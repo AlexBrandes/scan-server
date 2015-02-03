@@ -273,6 +273,15 @@
 		});
 	};
 
+	this.updateWifiConfig = function() {
+		self.log('error', 'Updating wifi config');
+		var childProcess = require('child_process');
+		var exec = childProcess.exec;
+		exec(__dirname+'/scripts/config-wifi.sh', function() {
+			self.log('error', 'Config WIFI execution finished.');
+		});
+	};
+
 	this.updateDevices = function() {
 		// find new scanners
 		var devicePaths = self.discoverDevicePaths();
@@ -467,6 +476,10 @@
 			self.exit(0);
 		});
 	};
+
+	if (self.config.update_wifi) {
+		self.updateWifiConfig();
+	}
 
 	console.log('Scan server running...');
 	self.loop = self.run();
