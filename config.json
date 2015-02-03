@@ -12,5 +12,5 @@
   "error_log" : "logs/error.log",
 	"debug_log" : "logs/debug.log",
 	"scan_log" : "logs/scan.log",
-	"update_wifi" : true
+	"update_wifi" : false
 }
