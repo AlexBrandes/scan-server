@@ -1,21 +1,3 @@
-echo "auto lo
+cp -f /home/pi/scanner/scripts/config-wifi.txt /etc/network/interfaces;
 
-iface lo inet loopback
-iface eth0 inet dhcp
-
-auto wlan0
-allow-hotplug wlan0
-iface wlan0 inet dhcp
-	wpa-scan-ssid 1
-	wpa-ap-scan 1
-	wpa-ket-mgmt WPA-PSK
-	wpa-proto RSN WPA
-	wpa-pairwise CCMP TKIP
-	wpa-ssid scannernet
-	wpa-psk 22d6c05db718dda2479ebd9c2007492d0e27087324150aba840bc2963aafb1c8
-
-iface default inet dhcp"
-
-> /etc/network/interfaces;
-
-./reset-wifi.sh;
+/home/pi/scanner/scripts/reset-wifi.sh;
