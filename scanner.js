@@ -104,7 +104,7 @@
 
 				case '--push-logs':
 				case 'push-logs':
-					var data = fs.readFileSync(config['scan_log'],'utf8');
+					var data = fs.readFileSync(config['scan_log']).toString();
 
 					var scans = data.split("\n");
 
