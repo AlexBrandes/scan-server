@@ -118,12 +118,12 @@
 						}
 
 						var pi_time = parts[0];
-						var scan_data = parts[1].split(',');
+						var scan_info = parts[1].split(',');
 						
 						scan_data.push({
-							user_id: scan_data[0],
-							time: scan_data[1],
-							scanner_id: scan_data[2]
+							user_id: scan_info[0],
+							time: scan_info[1],
+							scanner_id: scan_info[2]
 						});
 					}
 
@@ -139,11 +139,12 @@
 
 					request.post(push_data, function(err, httpResponse, body) {
 						if (err) {
-							throw new Error('There was a send error. Not sent.');
+							console.log('There was a send error. Not sent.');
 						}
 						else {
-							throw new Error('Successful response. '+scans.length+' scans sent.');
+							console.log('Successful response. '+scans.length+' scans sent.');
 						}
+						self.exit();
 					});
 					return; 
 				break
