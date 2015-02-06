@@ -8,7 +8,7 @@
 	"input_device" : "Code Corporation Code Reader 3500",
 	"data_separator": ",",
 	"data_fields" : ["user_id", "time", "scanner_id"],
-	"send_frequency" : 30,
+	"send_frequency" : 20,
 	"logtype" : "file",
   "error_log" : "logs/error.log",
 	"debug_log" : "logs/debug.log",
