@@ -130,7 +130,7 @@
 					var endpoint = self.config.api_endpoints['scan_log_push'];
 
 					var push_data = {
-						url: endpoint
+						url: endpoint,
 						formData: {
 							hostname: self.hostname,
 							data: JSON.stringify(scan_data)
