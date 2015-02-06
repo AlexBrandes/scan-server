@@ -104,9 +104,18 @@
 
 				case '--push-logs':
 				case 'push-logs':
-					var data = fs.readFileSync(config['scan_log']).toString();
+					var data = fs.readFileSync(config['scan_log'], 'utf8');
 
 					var scans = data.split("\n");
+
+					var endpoint = self.config.api_endpoints['scan_log_push'];
+					var push_data = {
+						url: endpoint,
+						formData: {
+							hostname: os.hostname(),
+							data: null
+						}
+					};
 
 					var scan_data = [];
 					for (var i=0; i < scans.length; i++) {
@@ -125,27 +134,25 @@
 							time: scan_info[1],
 							scanner_id: scan_info[2]
 						});
+
+						if (scan_data.length > 199) {
+							push_data.formData.data = scan_data;
+							request.post(push_data, function(err, httpResponse, body) {
+								if (err) {
+									console.log('There was a send error. Not sent.');
+								}
+								else {
+									console.log('Successful response. '+scans.length+' scans sent.');
+								}
+							});
+							scan_data = [];
+						}
 					}
 
-					var endpoint = self.config.api_endpoints['scan_log_push'];
+					
+					console.log(finished);
 
-					var push_data = {
-						url: endpoint,
-						formData: {
-							hostname: os.hostname(),
-							data: JSON.stringify(scan_data)
-						}
-					};
-
-					request.post(push_data, function(err, httpResponse, body) {
-						if (err) {
-							console.log('There was a send error. Not sent.');
-						}
-						else {
-							console.log('Successful response. '+scans.length+' scans sent.');
-						}
-						self.exit();
-					});
+					
 					return; 
 				break
 
