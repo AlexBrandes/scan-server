@@ -132,7 +132,7 @@
 					var push_data = {
 						url: endpoint,
 						formData: {
-							hostname: self.hostname,
+							hostname: os.hostname(),
 							data: JSON.stringify(scan_data)
 						}
 					};
