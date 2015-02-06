@@ -142,7 +142,7 @@
 									console.log('There was a send error. Not sent.');
 								}
 								else {
-									console.log('Successful response. '+scans.length+' scans sent.');
+									console.log('Successful response. '+scan_data.length+' scans sent.');
 								}
 							});
 							scan_data = [];
