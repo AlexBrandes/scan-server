@@ -102,6 +102,19 @@
 					throw ExitError;
 				break
 
+				case '--push-logs':
+				case 'push-logs':
+					var data = fs.readFileSync(config['scan_log'],'utf8');
+
+					var scans = data.split("\n");
+
+					console.log(scans[3]);
+					console.log(scans[18]);
+					console.log(scans[30]);
+					process.exit(code);
+					return; 
+				break
+
 				default: 
 					throw new Error(val+' is not a valid argument.');
 			}
