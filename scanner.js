@@ -150,8 +150,7 @@
 					}
 
 					
-					console.log(finished);
-
+					console.log('finished');
 					
 					return; 
 				break
