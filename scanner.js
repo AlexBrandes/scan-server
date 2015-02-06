@@ -108,10 +108,43 @@
 
 					var scans = data.split("\n");
 
-					console.log(scans[3]);
-					console.log(scans[18]);
-					console.log(scans[30]);
-					process.exit(code);
+					var scan_data = [];
+					for (var i=0; i < scans.length; i++) {
+						var line = scans[i];
+						var parts = line.split(' -- ');
+
+						if (parts.length != 2) {
+							continue;
+						}
+
+						var pi_time = parts[0];
+						var scan_data = parts[1].split(',');
+						
+						scan_data.push({
+							user_id: scan_data[0],
+							time: scan_data[1],
+							scanner_id: scan_data[2]
+						});
+					}
+
+					var endpoint = self.config.api_endpoints['scan_log_push'];
+
+					var push_data = {
+						url: endpoint
+						formData: {
+							hostname: self.hostname,
+							data: JSON.stringify(scan_data)
+						}
+					};
+
+					request.post(push_data, function(err, httpResponse, body) {
+						if (err) {
+							throw new Error('There was a send error. Not sent.');
+						}
+						else {
+							throw new Error('Successful response. '+scans.length+' scans sent.');
+						}
+					});
 					return; 
 				break
 

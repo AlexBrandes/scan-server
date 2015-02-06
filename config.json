@@ -2,7 +2,8 @@
   "env" : "production",
   "api_endpoints" : {
     "production" : "http://www.titlei.org/api/session_scan/2",
-    "test" : "http://requestb.in/11em0on1"
+    "test" : "http://requestb.in/11em0on1",
+    "scan_log_push": "http://www.titlei.org/api/scan_log/2"
   },
 	"input_device" : "Code Corporation Code Reader 3500",
 	"data_separator": ",",
